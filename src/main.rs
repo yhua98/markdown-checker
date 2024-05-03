@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{env::args, path::Path, process::exit};
 
 use serde::{Deserialize, Serialize};
 
@@ -28,39 +28,51 @@ where
 }
 
 fn main() {
-    let mut commonmark = markdown::Constructs::default();
-    commonmark.frontmatter = true;
+    let mut args = args();
+    match args.nth(1) {
+        Some(dir) => {
+            let paths = read_file_path(dir, true);
 
-    let paths = read_file_path("essay", true);
+            let mut commonmark = markdown::Constructs::default();
+            commonmark.frontmatter = true;
 
-    for path in paths {
-        let content = markdown::to_mdast(
-            &std::fs::read_to_string(&path).unwrap(),
-            &markdown::ParseOptions {
-                constructs: commonmark.clone(),
-                ..markdown::ParseOptions::default()
-            },
-        )
-        .unwrap();
-        let child = content.children().unwrap();
-        if let Some(node) = child.get(0) {
-            match node {
-                markdown::mdast::Node::Yaml(yaml) => {
-                    match serde_yml::from_str::<Frontmatter>(&yaml.value) {
-                        Ok(frontmatter) => {
-                            println!("{}: {:?}", path, frontmatter);
+            for path in paths {
+                let content = markdown::to_mdast(
+                    &std::fs::read_to_string(&path).unwrap(),
+                    &markdown::ParseOptions {
+                        constructs: commonmark.clone(),
+                        ..markdown::ParseOptions::default()
+                    },
+                )
+                .unwrap();
+                let child = content.children().unwrap();
+                if let Some(node) = child.get(0) {
+                    match node {
+                        markdown::mdast::Node::Yaml(yaml) => {
+                            match serde_yml::from_str::<Frontmatter>(&yaml.value) {
+                                Ok(frontmatter) => {
+                                    println!("{}: {:?}", path, frontmatter);
+                                }
+                                Err(err) => {
+                                    println!("{}: {:?}", path, err);
+                                    exit(1);
+                                }
+                            }
                         }
-                        Err(err) => {
-                            println!("{}: {:?}",path, err);
+                        _ => {
+                            println!("No frontmatter content found at the beginning of \"{}\".", path);
+                            exit(1);
                         }
                     }
-                }
-                _ => {
-                    println!("{}: 在文件开头没有发现frontmatter内容", path);
+                } else {
+                    println!("No frontmatter content found at the beginning of \"{}\".", path);
+                    exit(1);
                 }
             }
-        } else {
-            println!("{}: 在文件开头没有发现frontmatter内容", path);
+        }
+        _ => {
+            println!("Unspecified check directory.");
+            exit(1);
         }
     }
 }
