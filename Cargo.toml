@@ -1,0 +1,9 @@
+[package]
+name = "markdown-check"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+markdown = { version = "1.0.0-alpha.17", features=["json", "serde"] }
+serde = "1.0.200"
+serde_yml = "0.0.5"
