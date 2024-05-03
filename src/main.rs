@@ -60,18 +60,18 @@ fn main() {
                             }
                         }
                         _ => {
-                            println!("No frontmatter content found at the beginning of \"{}\".", path);
+                            eprintln!("No frontmatter content found at the beginning of \"{}\".", path);
                             exit(1);
                         }
                     }
                 } else {
-                    println!("No frontmatter content found at the beginning of \"{}\".", path);
+                    eprintln!("No frontmatter content found at the beginning of \"{}\".", path);
                     exit(1);
                 }
             }
         }
         _ => {
-            println!("Unspecified check directory.");
+            eprintln!("Unspecified check directory.");
             exit(1);
         }
     }
